@@ -1,0 +1,258 @@
+Project: Legacy Retail ETL Modernization
+Industry Domain: Retail and E-Commerce
+Project Duration: 20 Weeks
+Team Size: 10 Members
+Cloud Platform: Microsoft Azure
+
+
+LEGACY RETAIL ETL MODERNIZATION
+                 
+END-TO-END DATA ENGINEERING FLOW
+
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                    DATA SOURCES                         │
+ └──────────────────────────────────────────────────────────┘
+
+   POS System        CRM Data        ERP/Inventory
+ (SQL Server)       (MySQL)            (SAP)
+
+        E-commerce API          Vendor Files
+          (JSON/API)             (CSV/Excel)
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                  DATA INGESTION LAYER                   │
+ └──────────────────────────────────────────────────────────┘
+
+        Azure Data Factory (ADF)
+        SSIS Migration / API Pipelines
+
+ Tasks:
+ ✔ Extract data from multiple sources
+ ✔ Schedule daily/hourly pipelines
+ ✔ Move raw data to cloud storage
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                    RAW DATA STORAGE                     │
+ └──────────────────────────────────────────────────────────┘
+
+              Azure Data Lake Storage (ADLS)
+
+              Raw Zone / Bronze Layer
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                DATA TRANSFORMATION LAYER                │
+ └──────────────────────────────────────────────────────────┘
+
+                 Databricks + PySpark + SQL
+
+ Tasks:
+ ✔ Data cleansing
+ ✔ Remove duplicates
+ ✔ Null handling
+ ✔ Join multiple datasets
+ ✔ Standardize formats
+ ✔ Business transformations
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                 CURATED DATA STORAGE                    │
+ └──────────────────────────────────────────────────────────┘
+
+          Azure Synapse / Snowflake / SQL DW
+
+                 Gold Layer / Data Warehouse
+
+ Tables:
+ ✔ Sales Fact Table
+ ✔ Customer Dimension
+ ✔ Product Dimension
+ ✔ Inventory Summary
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                  REPORTING & ANALYTICS                  │
+ └──────────────────────────────────────────────────────────┘
+
+                      Power BI Dashboard
+
+ Reports:
+ ✔ Sales Performance
+ ✔ Top Selling Products
+ ✔ Inventory Status
+ ✔ Customer Insights
+ ✔ Regional Revenue Trends
+
+                         │
+                         ▼
+
+ ┌──────────────────────────────────────────────────────────┐
+ │                    BUSINESS USERS                       │
+ └──────────────────────────────────────────────────────────┘
+
+      Management | Sales Team | Operations Team
+
+
+
+1. Project Overview
+Section Summary
+
+This project focuses on modernizing a legacy retail ETL ecosystem that struggled with fragmented data sources, delayed reporting, and scalability limitations. The solution implements a cloud-native Azure-based lakehouse platform that consolidates retail sales, inventory, customer, vendor, and e-commerce data into a unified analytics environment. Using Azure Data Factory, Azure Databricks, Delta Lake, and Power BI, the platform enables scalable data ingestion, transformation, governance, and enterprise reporting through Medallion Architecture.
+
+1.1 Description
+1.1.1 Executive Context
+
+Retail enterprises generate massive amounts of operational and customer data across multiple systems including POS applications, ERP platforms, CRM systems, supplier portals, and e-commerce platforms. In legacy environments, these systems operate independently, causing data silos, inconsistent reporting, and slow business decision-making.
+
+Business teams face challenges such as:
+
+Delayed daily sales reporting
+Inventory mismatches across stores
+Duplicate customer records
+Manual reconciliation using spreadsheets
+Poor scalability of on-prem ETL jobs during seasonal sales
+
+Leadership lacks a centralized and trusted analytics platform to monitor sales performance, customer behavior, inventory utilization, and operational KPIs in near real-time.
+
+1.1.2 Technical Solution Narrative
+
+The project modernizes the legacy ETL framework into a scalable Azure Unified Retail Data Platform capable of:
+
+Ingesting structured and semi-structured retail datasets
+Supporting batch and incremental data processing
+Standardizing and cleansing enterprise retail data
+Delivering governed analytical datasets
+Providing centralized dashboards for business users
+
+The solution leverages:
+
+Azure Data Factory (ADF) for orchestration and ingestion
+Azure Data Lake Storage Gen2 (ADLS Gen2) as centralized storage
+Azure Databricks + PySpark for scalable transformations
+Delta Lake for ACID-compliant data processing
+Azure Synapse Analytics / SQL Warehouse for reporting-ready datasets
+Power BI for executive and operational dashboards
+
+The platform follows the Medallion Architecture (Bronze → Silver → Gold) model to improve data reliability, maintainability, and analytics performance.
+
+1.1.3 Project Metadata Table
+Attribute	Value	Notes
+Assignment Title	Legacy Retail ETL Modernization	Azure Cloud Retail Analytics Platform
+Assignment Type	Real-Time Data Engineering Project	End-to-end ETL modernization
+Industry Domain	Retail & E-Commerce	Sales, inventory, customer analytics
+Duration	14–16 Weeks	Agile sprint-based execution
+Team Size	5 Data Resources	DE, BI, QA, DevOps, Architect
+Cloud Platform	Microsoft Azure	Cloud-native managed services
+Reporting Tool	Power BI	Interactive dashboards
+Processing Engine	Azure Databricks	PySpark + Delta Lake
+1.1.4 Stakeholder Matrix
+Stakeholder	Primary Need	Platform Capability
+Executive Leadership	Revenue and profit visibility	Executive Power BI dashboards
+Store Operations Team	Inventory and stock monitoring	Inventory analytics dashboards
+Sales & Marketing	Customer segmentation and sales trends	Customer analytics datasets
+Finance Team	Revenue reconciliation and KPI tracking	Gold layer fact tables
+Data Engineering Team	Automated scalable pipelines	ADF orchestration + Databricks
+IT & Security	Secure and governed data access	RBAC + Key Vault + audit logging
+Regional Managers	Region-wise store performance	Power BI Row-Level Security
+1.1.5 Business Problem → Solution Flow
+Legacy Retail Systems
+(POS, ERP, CRM, APIs, CSV Files)
+                │
+                ▼
+    Azure Data Factory Pipelines
+                │
+                ▼
+       ADLS Gen2 - Bronze Layer
+       (Raw Data Storage)
+                │
+                ▼
+      Azure Databricks + PySpark
+      (Data Cleansing & Transformation)
+                │
+                ▼
+       Silver Layer (Cleaned Data)
+                │
+                ▼
+        Gold Layer (Business KPIs)
+                │
+                ▼
+          Power BI Dashboards
+                │
+                ▼
+       Business Decision Making
+1.2 Business Problem
+
+The retail organization experiences operational inefficiencies due to disconnected legacy systems and outdated ETL processes. Reporting teams spend significant time manually consolidating data from multiple sources, resulting in inconsistent KPIs and delayed insights.
+
+Key Problem Statements
+#	Problem Statement
+1	Data distributed across disconnected retail systems
+2	No centralized analytics platform
+3	Slow and delayed reporting cycles
+4	Duplicate and inconsistent customer records
+5	Manual report generation using spreadsheets
+6	Legacy ETL jobs failing during peak loads
+7	Lack of real-time visibility into inventory and sales
+1.2.1 Problem Impact Analysis
+#	Problem	Business Impact	Risk if Unaddressed	Platform Remedy
+1	Data silos	Conflicting reports	Poor business decisions	Centralized ADLS platform
+2	No analytics platform	Slow reporting	Operational delays	Unified lakehouse architecture
+3	Delayed KPIs	Missed sales opportunities	Revenue leakage	Automated incremental pipelines
+4	Poor data quality	Incorrect customer insights	Customer dissatisfaction	Silver layer cleansing
+5	Manual reporting	High manual effort	Human errors	Automated Power BI refresh
+6	Legacy ETL scalability issues	Pipeline failures	SLA breaches	Autoscaling Databricks
+7	No inventory visibility	Overstock/stockout risk	Loss of sales	Near real-time dashboards
+1.2.2 As-Is vs To-Be Architecture
+As-Is Legacy Environment	To-Be Modernized Platform
+Multiple disconnected databases	Centralized Azure Data Lake
+On-prem SSIS ETL jobs	Cloud-native ADF pipelines
+Manual Excel reports	Automated Power BI dashboards
+Limited scalability	Autoscaling Databricks clusters
+No governance	Role-based secured platform
+Duplicate datasets	Unified curated datasets
+1.3 Business Objectives
+Objective	Success Criteria	KPI / Metric	Owner
+Build centralized retail data platform	All critical sources onboarded	100% source integration	Data Architect
+Automate ETL pipelines	Scheduled ADF pipelines operational	90% automation achieved	Data Engineer
+Improve reporting performance	Faster dashboard refresh	60% reduction in reporting time	BI Developer
+Enhance data quality	Deduplication and validation implemented	<2% data inconsistency	QA Team
+Support scalable analytics	Dynamic cluster scaling enabled	Zero peak-load failures	Databricks Engineer
+Enable self-service BI	Business dashboards published	3+ dashboards delivered	Power BI Developer
+Strengthen security and governance	Secure secrets and RBAC implemented	Zero hardcoded credentials	DevOps Engineer
+1.3.1 Objective Dependency Flow
+Data Source Integration
+            │
+            ▼
+ Automated ETL Pipelines
+            │
+            ▼
+ Data Cleansing & Governance
+            │
+            ▼
+ Curated Gold Layer
+            │
+            ▼
+ Power BI Dashboards
+            │
+            ▼
+ Business Insights & Decisions
+1.3.2 Narrative: Why These Objectives Matter
+
+The modernization initiative enables the retail organization to transition from fragmented reporting and legacy ETL limitations to a scalable cloud-based analytics ecosystem. Centralizing data into ADLS Gen2 creates a single source of truth across sales, inventory, and customer domains.
+
+Automated ADF pipelines reduce manual intervention and improve operational reliability, while Databricks transformations ensure high-quality curated datasets. Governance through RBAC and Key Vault improves security compliance and operational control.
+
+Ultimately, the project empowers business stakeholders with faster reporting, improved inventory visibility, enhanced customer analytics, and scalable enterprise-grade data engineering capabilities.
