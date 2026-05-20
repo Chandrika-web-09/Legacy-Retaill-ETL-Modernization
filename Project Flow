@@ -1,258 +1,484 @@
 Project: Legacy Retail ETL Modernization
+________
 Industry Domain: Retail and E-Commerce
+________________
 Project Duration: 20 Weeks
+_________________
 Team Size: 10 Members
+__________
 Cloud Platform: Microsoft Azure
+_______________
 
-
+*********************************************************************************************************************************************************
 LEGACY RETAIL ETL MODERNIZATION
-                 
+**********************************************************************************************************************************************************             
+OVERVIEW
+________
+
+•	I worked on migrating legacy SSIS-based retail ETL pipelines to Azure cloud architecture.
+•	Initially, we analyzed existing SSIS packages, dependencies, source systems, and data volumes, which were around 20 million daily retail transactions.
+•	We designed a Medallion architecture using ADLS Bronze, Silver, and Gold layers.
+•	ADF pipelines were developed for incremental ingestion from SQL Server, APIs, and CSV files into Bronze storage.
+•	PySpark transformations in Databricks handled cleansing, deduplication, joins, standardization, and KPI calculations on large-scale datasets.
+•	We optimized Spark jobs using partitioning, broadcast joins, and Delta Lake optimizations, improving throughput by 3x.
+•	Gold layer business metrics were consumed in Power BI dashboards for sales, inventory, and customer analytics.
+•	We implemented CI/CD using Azure DevOps and enabled blue-green deployments for zero-downtime releases while
+
+**************************************************************************************************************************************************************
 END-TO-END DATA ENGINEERING FLOW
+_________________________________
+
+PROJECT CONTEXT
+________________
+
+The retail company has
+______________________
+•	200+ stores 
+•	Legacy SSIS ETL pipelines running on on-prem servers 
+•	Data coming from: 
+o	POS systems 
+o	ERP databases 
+o	CRM systems 
+o	CSV vendor files 
+o	APIs 
+
+Main problems
+_____________
+•	ETL jobs taking 5–6 hours 
+•	Frequent failures 
+•	Difficult maintenance 
+•	Scaling issues during sales season 
+•	Delayed Power BI reports 
+
+GOAL
+____
+Modernize legacy SSIS pipelines to Azure cloud architecture
+
+****************************************************************************************************************************************************************
+PHASE 1 — ANALYSIS & STRATEGY PLANNING
+_______________________________________
+
+Step 1 — Analyze Existing SSIS Pipelines
+________________________________________
+I collected
+___________
+•	SSIS packages 
+•	Source systems 
+•	SQL queries 
+•	Stored procedures 
+•	Scheduling logic 
+•	Dependencies 
+
+Example
+________
+SSIS Package ->	Purpose
+Load_Sales.dtsx	-> Daily sales load
+Load_Inventory.dtsx	-> Inventory updates
+Customer_ETL.dtsx	-> CRM sync
+
+Step 2 — Understand Data Volume
+_______________________________
+This was critical before designing architecture.
+
+Approx Retail Data Size
+_______________________
+Source	-> Daily Records
+POS Sales	-> 15–20 million
+Inventory	-> 5 million
+CRM	-> 2 million
+API Orders	-> 1 million
+
+Approx
+_______
+~200–300 GB daily ingestion
+
+Historical migration
+____________________
+~50 TB old retail data
+
+Why this matters?
+_________________
+Because architecture changes based on:
+•	Data size 
+•	Velocity 
+•	Parallelism required 
+
+Since data is huge
+__________________
+•	PySpark needed 
+•	Distributed processing needed 
+•	Cloud storage required 
+
+************************************************************************
+PHASE 2 — DESIGNING MODERN AZURE ARCHITECTURE
+_____________________________________________
+
+Architecture Decided
+____________________
+
+Source Systems
+    ↓
+Azure Data Factory
+    ↓
+ADLS Bronze Layer
+    ↓
+Databricks + PySpark
+    ↓
+Silver Layer
+    ↓
+Gold Layer
+    ↓
+Power BI
+
+Why this architecture?
+______________________
+
+Tool	-> Why Used
+ADF	-> Pipeline orchestration
+ADLS	-> Cheap scalable storage
+Databricks	-> Big data processing
+PySpark	-> Parallel transformation
+SQL	-> KPI aggregations
+Power BI	-> Reporting
+
+*****************************************************************************************************************************************************************
+PHASE 3 — BUILDING INGESTION PIPELINES
+______________________________________
+
+Actual Work Done
+________________
+We replaced SSIS extraction logic with ADF pipelines.
+
+Source Database
+_______________
+RetailDB.SalesTransactions
+
+Contains
+________
+transaction_id	product_id	qty	amount
+
+ADF PIPELINE FLOW
+_________________
+SQL Server → ADF Copy Activity → ADLS Bronze
+
+Activities Used in ADF
+______________________
+Activity	-> Purpose
+Copy Activity	-> Move data
+Lookup Activity	-> Read configs
+ForEach	-> Loop through tables
+Execute Notebook	-> Trigger Databricks
+Stored Procedure	-> Audit logging
+
+Incremental Load Logic
+______________________
+
+Instead of loading full table daily:
+•	Loaded only new records 
+
+SQL Query Used in ADF
+_____________________
+
+SELECT *
+FROM SalesTransactions
+WHERE modified_date > ?
+Parameter:
+Last successful load timestamp
+
+Why incremental loading?
+________________________
+
+•	Faster processing 
+•	Less compute cost 
+•	Reduced pipeline runtime 
+
+**********************************************************************************************************************************************************
+PHASE 4 — BRONZE LAYER STORAGE
+______________________________
+
+What happens here?
+__________________
+
+ADF stores raw files into ADLS.
+Folder Structure
+/bronze/sales/2026/05/20/
+/bronze/inventory/
+/bronze/crm/
+
+File Formats Used
+_________________
+
+Format	-> Why
+Parquet	-> Compressed + fast
+CSV	-> Vendor feeds
+JSON	-> APIs
+
+Why Bronze Layer important?
+___________________________
+•	Keep original raw data 
+•	Reprocessing capability 
+•	Audit & compliance 
+
+*****************************************************************************************************************************************************
+PHASE 5 — DATABRICKS + PYSPARK TRANSFORMATIONS
+______________________________________________
+
+This is where most engineering work happened.
+
+Step 1 — Read Bronze Data
+_________________________
+
+PySpark Code
+df = spark.read.format("parquet").load("/bronze/sales/")
+
+Step 2 — Data Validation
+________________________
+
+Checked:
+•	Nulls 
+•	Duplicates 
+•	Invalid values 
+•	Data type mismatches 
+
+Example Problem
+_______________
+transaction_id	amount
+1001	-500
+Negative sales invalid.
+
+Cleaning Logic
+______________
+Remove Null Product IDs
+df = df.dropna(subset=["product_id"])
+Remove Duplicates
+df = df.dropDuplicates(["transaction_id"])
+
+Remove Invalid Amounts
+______________________
+df = df.filter(df.amount > 0)
+Step 3 — Standardization
+Convert Date Format
+from pyspark.sql.functions import to_date
+df = df.withColumn(
+    "sale_date",
+    to_date("sale_date", "yyyy-MM-dd")
+)
+
+Step 4 — Business Transformations
+__________________________________
+Calculate Revenue
+from pyspark.sql.functions import col
+df = df.withColumn(
+    "revenue",
+    col("qty") * col("unit_price")
+)
+
+Step 5 — Join Multiple Sources
+______________________________
+
+•	Sales data 
+•	Product master 
+•	Customer table 
+
+Join Query
+__________
+
+final_df = sales_df.join(
+    product_df,
+    "product_id",
+    "left"
+)
+
+Why PySpark?
+____________
+
+20+ million records/day
+Single-machine Python would become slow.
+PySpark distributes processing across clusters.
+
+PERFORMANCE OPTIMIZATION WORK
+_____________________________
+
+This is how throughput improved 3x.
+
+Optimization Techniques Used
+_____________________________
+Technique	-> Purpose
+Partitioning	-> Faster reads
+Caching	-> Reuse data
+Broadcast joins	-> Faster joins
+Delta tables	-> Optimized storage
+
+Example Partitioning
+____________________
+
+df.write.partitionBy("sale_date")
+Example Broadcast Join
+from pyspark.sql.functions import broadcast
+final_df = sales_df.join(
+    broadcast(product_df),
+    "product_id"
+)
+
+*************************************************************************************************************************************************************
+PHASE 6 — SILVER LAYER
+______________________
+
+Cleaned standardized data is stored here.
+
+Example Tables
+______________
+
+Table	Description
+silver_sales	-> Clean sales
+silver_customers	-> Valid customer data
+silver_inventory	-> Updated inventory
+
+Why Silver Layer?
+_________________
+
+Because business users should not use raw data.
+Silver ensures:
+•	Clean 
+•	Trusted 
+•	Consistent data 
+
+***************************************************************************************************************************************************
+PHASE 7 — GOLD LAYER KPI CREATION
+__________________________________
+
+Now business metrics is created.
 
 
- ┌──────────────────────────────────────────────────────────┐
- │                    DATA SOURCES                         │
- └──────────────────────────────────────────────────────────┘
+SQL Queries Written
+___________________
 
-   POS System        CRM Data        ERP/Inventory
- (SQL Server)       (MySQL)            (SAP)
+Daily Revenue
+_____________
 
-        E-commerce API          Vendor Files
-          (JSON/API)             (CSV/Excel)
+SELECT
+    store_id,
+    sale_date,
+    SUM(revenue) AS total_sales
+FROM silver_sales
+GROUP BY store_id, sale_date;
 
-                         │
-                         ▼
+Top Selling Products
+____________________
 
- ┌──────────────────────────────────────────────────────────┐
- │                  DATA INGESTION LAYER                   │
- └──────────────────────────────────────────────────────────┘
+SELECT
+    product_name,
+    SUM(qty) AS units_sold
+FROM silver_sales
+GROUP BY product_name
+ORDER BY units_sold DESC;
 
-        Azure Data Factory (ADF)
-        SSIS Migration / API Pipelines
+Customer Retention
+__________________
 
- Tasks:
- ✔ Extract data from multiple sources
- ✔ Schedule daily/hourly pipelines
- ✔ Move raw data to cloud storage
+SELECT
+    customer_id,
+    COUNT(DISTINCT order_id) AS repeat_orders
+FROM silver_sales
+GROUP BY customer_id;
 
-                         │
-                         ▼
+Gold Tables Created
+___________________
 
- ┌──────────────────────────────────────────────────────────┐
- │                    RAW DATA STORAGE                     │
- └──────────────────────────────────────────────────────────┘
+Gold Table	-> Purpose
+gold_daily_sales	-> Revenue reporting
+gold_inventory_kpi	-> Stock analysis
+gold_customer_metrics ->	Loyalty analysis
 
-              Azure Data Lake Storage (ADLS)
+**********************************************************************************************************************************************************
+PHASE 8 — POWER BI REPORTING
+____________________________
 
-              Raw Zone / Bronze Layer
+Power BI connected to Gold Layer.
 
-                         │
-                         ▼
+Dashboards Built
+_________________
 
- ┌──────────────────────────────────────────────────────────┐
- │                DATA TRANSFORMATION LAYER                │
- └──────────────────────────────────────────────────────────┘
+Executive Dashboard
+•	Total revenue 
+•	Profit margin 
+•	Store performance 
 
-                 Databricks + PySpark + SQL
+Inventory Dashboard
+•	Stock aging 
+•	Out-of-stock alerts 
 
- Tasks:
- ✔ Data cleansing
- ✔ Remove duplicates
- ✔ Null handling
- ✔ Join multiple datasets
- ✔ Standardize formats
- ✔ Business transformations
+Customer Dashboard
+•	Repeat customers 
+•	Regional buying trends 
 
-                         │
-                         ▼
+*****************************************************************************************************************************************************
+PHASE 9 — CI/CD USING AZURE DEVOPS
+__________________________________
 
- ┌──────────────────────────────────────────────────────────┐
- │                 CURATED DATA STORAGE                    │
- └──────────────────────────────────────────────────────────┘
+Actual deployment process
+__________________________
 
-          Azure Synapse / Snowflake / SQL DW
+Earlier:
+•	Manual deployments 
+•	Downtime risk 
+Now:
+Git → Azure DevOps → Automated Deployment
 
-                 Gold Layer / Data Warehouse
+What stored in Git?
+___________________
 
- Tables:
- ✔ Sales Fact Table
- ✔ Customer Dimension
- ✔ Product Dimension
- ✔ Inventory Summary
+•	ADF JSON pipelines 
+•	Databricks notebooks 
+•	SQL scripts 
+•	ARM templates 
 
-                         │
-                         ▼
+Blue-Green Deployment
+_____________________
 
- ┌──────────────────────────────────────────────────────────┐
- │                  REPORTING & ANALYTICS                  │
- └──────────────────────────────────────────────────────────┘
+How it worked
+Environment	Purpose
+Blue -> Current production
+Green	-> New version
 
-                      Power BI Dashboard
+New pipeline tested in Green.
 
- Reports:
- ✔ Sales Performance
- ✔ Top Selling Products
- ✔ Inventory Status
- ✔ Customer Insights
- ✔ Regional Revenue Trends
+After validation
+_________________
 
-                         │
-                         ▼
+•	Traffic switched from Blue → Green 
+Result:
+Zero downtime deployments
 
- ┌──────────────────────────────────────────────────────────┐
- │                    BUSINESS USERS                       │
- └──────────────────────────────────────────────────────────┘
+*************************************************************
+PHASE 10 — MONITORING & ALERTING
+________________________________
 
-      Management | Sales Team | Operations Team
+Azure Monitor Setup
+Monitored:
+•	Failed pipelines 
+•	Long-running jobs 
+•	Cluster failures 
+•	Data delays 
+
+Example Alert
+_______________
+If pipeline runtime > 30 mins
+→ Send email alert
+
+******************************************************************************************************************************************************
+FINAL BUSINESS IMPACT
+_____________________
+
+Metric -> Before-> After
+ETL Runtime ->6 hrs	-> 2 hrs
+Pipeline failures	-> Frequent	-> Minimal
+Maintenance effort	-> High	-> Reduced 50%
+Reporting delay	-> Next day	-> Near real-time
+Deployment downtime	-> Yes ->	Zero downtime
+
+***********************************************************************************************************************************************************************
 
 
 
-1. Project Overview
-Section Summary
 
-This project focuses on modernizing a legacy retail ETL ecosystem that struggled with fragmented data sources, delayed reporting, and scalability limitations. The solution implements a cloud-native Azure-based lakehouse platform that consolidates retail sales, inventory, customer, vendor, and e-commerce data into a unified analytics environment. Using Azure Data Factory, Azure Databricks, Delta Lake, and Power BI, the platform enables scalable data ingestion, transformation, governance, and enterprise reporting through Medallion Architecture.
-
-1.1 Description
-1.1.1 Executive Context
-
-Retail enterprises generate massive amounts of operational and customer data across multiple systems including POS applications, ERP platforms, CRM systems, supplier portals, and e-commerce platforms. In legacy environments, these systems operate independently, causing data silos, inconsistent reporting, and slow business decision-making.
-
-Business teams face challenges such as:
-
-Delayed daily sales reporting
-Inventory mismatches across stores
-Duplicate customer records
-Manual reconciliation using spreadsheets
-Poor scalability of on-prem ETL jobs during seasonal sales
-
-Leadership lacks a centralized and trusted analytics platform to monitor sales performance, customer behavior, inventory utilization, and operational KPIs in near real-time.
-
-1.1.2 Technical Solution Narrative
-
-The project modernizes the legacy ETL framework into a scalable Azure Unified Retail Data Platform capable of:
-
-Ingesting structured and semi-structured retail datasets
-Supporting batch and incremental data processing
-Standardizing and cleansing enterprise retail data
-Delivering governed analytical datasets
-Providing centralized dashboards for business users
-
-The solution leverages:
-
-Azure Data Factory (ADF) for orchestration and ingestion
-Azure Data Lake Storage Gen2 (ADLS Gen2) as centralized storage
-Azure Databricks + PySpark for scalable transformations
-Delta Lake for ACID-compliant data processing
-Azure Synapse Analytics / SQL Warehouse for reporting-ready datasets
-Power BI for executive and operational dashboards
-
-The platform follows the Medallion Architecture (Bronze → Silver → Gold) model to improve data reliability, maintainability, and analytics performance.
-
-1.1.3 Project Metadata Table
-Attribute	Value	Notes
-Assignment Title	Legacy Retail ETL Modernization	Azure Cloud Retail Analytics Platform
-Assignment Type	Real-Time Data Engineering Project	End-to-end ETL modernization
-Industry Domain	Retail & E-Commerce	Sales, inventory, customer analytics
-Duration	14–16 Weeks	Agile sprint-based execution
-Team Size	5 Data Resources	DE, BI, QA, DevOps, Architect
-Cloud Platform	Microsoft Azure	Cloud-native managed services
-Reporting Tool	Power BI	Interactive dashboards
-Processing Engine	Azure Databricks	PySpark + Delta Lake
-1.1.4 Stakeholder Matrix
-Stakeholder	Primary Need	Platform Capability
-Executive Leadership	Revenue and profit visibility	Executive Power BI dashboards
-Store Operations Team	Inventory and stock monitoring	Inventory analytics dashboards
-Sales & Marketing	Customer segmentation and sales trends	Customer analytics datasets
-Finance Team	Revenue reconciliation and KPI tracking	Gold layer fact tables
-Data Engineering Team	Automated scalable pipelines	ADF orchestration + Databricks
-IT & Security	Secure and governed data access	RBAC + Key Vault + audit logging
-Regional Managers	Region-wise store performance	Power BI Row-Level Security
-1.1.5 Business Problem → Solution Flow
-Legacy Retail Systems
-(POS, ERP, CRM, APIs, CSV Files)
-                │
-                ▼
-    Azure Data Factory Pipelines
-                │
-                ▼
-       ADLS Gen2 - Bronze Layer
-       (Raw Data Storage)
-                │
-                ▼
-      Azure Databricks + PySpark
-      (Data Cleansing & Transformation)
-                │
-                ▼
-       Silver Layer (Cleaned Data)
-                │
-                ▼
-        Gold Layer (Business KPIs)
-                │
-                ▼
-          Power BI Dashboards
-                │
-                ▼
-       Business Decision Making
-1.2 Business Problem
-
-The retail organization experiences operational inefficiencies due to disconnected legacy systems and outdated ETL processes. Reporting teams spend significant time manually consolidating data from multiple sources, resulting in inconsistent KPIs and delayed insights.
-
-Key Problem Statements
-#	Problem Statement
-1	Data distributed across disconnected retail systems
-2	No centralized analytics platform
-3	Slow and delayed reporting cycles
-4	Duplicate and inconsistent customer records
-5	Manual report generation using spreadsheets
-6	Legacy ETL jobs failing during peak loads
-7	Lack of real-time visibility into inventory and sales
-1.2.1 Problem Impact Analysis
-#	Problem	Business Impact	Risk if Unaddressed	Platform Remedy
-1	Data silos	Conflicting reports	Poor business decisions	Centralized ADLS platform
-2	No analytics platform	Slow reporting	Operational delays	Unified lakehouse architecture
-3	Delayed KPIs	Missed sales opportunities	Revenue leakage	Automated incremental pipelines
-4	Poor data quality	Incorrect customer insights	Customer dissatisfaction	Silver layer cleansing
-5	Manual reporting	High manual effort	Human errors	Automated Power BI refresh
-6	Legacy ETL scalability issues	Pipeline failures	SLA breaches	Autoscaling Databricks
-7	No inventory visibility	Overstock/stockout risk	Loss of sales	Near real-time dashboards
-1.2.2 As-Is vs To-Be Architecture
-As-Is Legacy Environment	To-Be Modernized Platform
-Multiple disconnected databases	Centralized Azure Data Lake
-On-prem SSIS ETL jobs	Cloud-native ADF pipelines
-Manual Excel reports	Automated Power BI dashboards
-Limited scalability	Autoscaling Databricks clusters
-No governance	Role-based secured platform
-Duplicate datasets	Unified curated datasets
-1.3 Business Objectives
-Objective	Success Criteria	KPI / Metric	Owner
-Build centralized retail data platform	All critical sources onboarded	100% source integration	Data Architect
-Automate ETL pipelines	Scheduled ADF pipelines operational	90% automation achieved	Data Engineer
-Improve reporting performance	Faster dashboard refresh	60% reduction in reporting time	BI Developer
-Enhance data quality	Deduplication and validation implemented	<2% data inconsistency	QA Team
-Support scalable analytics	Dynamic cluster scaling enabled	Zero peak-load failures	Databricks Engineer
-Enable self-service BI	Business dashboards published	3+ dashboards delivered	Power BI Developer
-Strengthen security and governance	Secure secrets and RBAC implemented	Zero hardcoded credentials	DevOps Engineer
-1.3.1 Objective Dependency Flow
-Data Source Integration
-            │
-            ▼
- Automated ETL Pipelines
-            │
-            ▼
- Data Cleansing & Governance
-            │
-            ▼
- Curated Gold Layer
-            │
-            ▼
- Power BI Dashboards
-            │
-            ▼
- Business Insights & Decisions
-1.3.2 Narrative: Why These Objectives Matter
-
-The modernization initiative enables the retail organization to transition from fragmented reporting and legacy ETL limitations to a scalable cloud-based analytics ecosystem. Centralizing data into ADLS Gen2 creates a single source of truth across sales, inventory, and customer domains.
-
-Automated ADF pipelines reduce manual intervention and improve operational reliability, while Databricks transformations ensure high-quality curated datasets. Governance through RBAC and Key Vault improves security compliance and operational control.
-
-Ultimately, the project empowers business stakeholders with faster reporting, improved inventory visibility, enhanced customer analytics, and scalable enterprise-grade data engineering capabilities.
