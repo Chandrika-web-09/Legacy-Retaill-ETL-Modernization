@@ -1,12 +1,12 @@
 # Legacy-Retaill-ETL-Modernization
 
 LEGACY RETAIL ETL MODERNIZATION
-                 END-TO-END DATA ENGINEERING FLOW
+                 
+END-TO-END DATA ENGINEERING FLOW
 
-
- ┌──────────────────────────────────────────────────────────┐
- │                    DATA SOURCES                         │
- └──────────────────────────────────────────────────────────┘
+_________________________________________________________________
+                  DATA SOURCES                         
+_________________________________________________________________
 
    POS System        CRM Data        ERP/Inventory
  (SQL Server)       (MySQL)            (SAP)
@@ -14,12 +14,11 @@ LEGACY RETAIL ETL MODERNIZATION
         E-commerce API          Vendor Files
           (JSON/API)             (CSV/Excel)
 
-                         │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                  DATA INGESTION LAYER                   │
- └──────────────────────────────────────────────────────────┘
+                        |
+                        |
+_________________________________________________________________                         
+                   DATA INGESTION LAYER                  
+_________________________________________________________________
 
         Azure Data Factory (ADF)
         SSIS Migration / API Pipelines
@@ -28,24 +27,21 @@ LEGACY RETAIL ETL MODERNIZATION
  ✔ Extract data from multiple sources
  ✔ Schedule daily/hourly pipelines
  ✔ Move raw data to cloud storage
-
-                         │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                    RAW DATA STORAGE                     │
- └──────────────────────────────────────────────────────────┘
-
+                          
+                         |
+                         |
+_________________________________________________________________
+                     RAW DATA STORAGE                     
+_________________________________________________________________
               Azure Data Lake Storage (ADLS)
 
               Raw Zone / Bronze Layer
 
-                         │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                DATA TRANSFORMATION LAYER                │
- └──────────────────────────────────────────────────────────┘
+                         |
+                         |
+_________________________________________________________________                 
+                DATA TRANSFORMATION LAYER                │
+_________________________________________________________________
 
                  Databricks + PySpark + SQL
 
@@ -58,12 +54,10 @@ LEGACY RETAIL ETL MODERNIZATION
  ✔ Business transformations
 
                          │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                 CURATED DATA STORAGE                    │
- └──────────────────────────────────────────────────────────┘
-
+                         |
+ _________________________________________________________________
+                  CURATED DATA STORAGE                    
+__________________________________________________________________
           Azure Synapse / Snowflake / SQL DW
 
                  Gold Layer / Data Warehouse
@@ -74,12 +68,11 @@ LEGACY RETAIL ETL MODERNIZATION
  ✔ Product Dimension
  ✔ Inventory Summary
 
-                         │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                  REPORTING & ANALYTICS                  │
- └──────────────────────────────────────────────────────────┘
+                          |
+                          |
+ _________________________________________________________________
+                   REPORTING & ANALYTICS                  
+ _________________________________________________________________
 
                       Power BI Dashboard
 
@@ -90,11 +83,10 @@ LEGACY RETAIL ETL MODERNIZATION
  ✔ Customer Insights
  ✔ Regional Revenue Trends
 
-                         │
-                         ▼
-
- ┌──────────────────────────────────────────────────────────┐
- │                    BUSINESS USERS                       │
- └──────────────────────────────────────────────────────────┘
+                         |
+                         |
+ __________________________________________________________________
+                     BUSINESS USERS                       
+ __________________________________________________________________
 
       Management | Sales Team | Operations Team
